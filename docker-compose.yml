@@ -1,0 +1,61 @@
+version: '2'
+services:
+  php:
+    restart: always
+    image: registry.cn-hangzhou.aliyuncs.com/base-php/ubuntu-php-nginx:1.0
+    container_name: game
+    volumes:
+    - /e/WWW:/home/worker/data/www
+    - ./php/php-fpm.ini:/home/worker/php/etc/php-fpm.ini
+    - ./php/php-fpm.conf:/home/worker/php/etc/php-fpm.conf
+    - ./php/php.d/xdebug.ini:/home/worker/php/etc/php.d/xdebug.ini
+    - ./nginx/nginx.conf:/home/worker/nginx/conf/nginx.conf
+    - ./nginx/conf.d:/home/worker/nginx/conf.d
+    - ./init.sh:/etc/my_init.d/init.sh
+    ports:
+      - "80:80" 
+      - "39001:39001"
+      - "39002:39002"
+    networks:
+      - new
+    depends_on:
+      - redis
+      - memcached
+      - mysql
+    extra_hosts:
+      - "localhost:192.168.1.104"
+  redis:
+    restart: always
+    image:  registry.cn-hangzhou.aliyuncs.com/qyyteam/redis:1.0.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - /e/persistent/redis:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - new 
+    container_name: redis
+  memcached:
+    restart: always
+    image: registry.cn-hangzhou.aliyuncs.com/qyyteam/memcached:1.0.0
+    ports:
+      - "11211:11211"
+    networks:
+      - new 
+    container_name: memcached
+  mysql:
+    restart: always
+    image: daocloud.io/library/mysql:5.7.20
+    ports:
+      - "3306:3306"
+    volumes:
+      - /e/persistent/mysql/data:/var/lib/mysql 
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    networks:
+      - new 
+    container_name: mysql
+networks:
+    new:
